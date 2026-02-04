@@ -2,11 +2,20 @@
 #First, we define our imports
 import os
 import img2pdf
-import pandas as pd
+from PIL import Image
 
 
 
 #Here we'll define functions
+
+def convert_webp(img, name):
+    """Due a significant compatibility problem with .webp images, I added this funny method"""
+
+    image = Image.open(img).convert("RGB")
+    ruta_relativa = os.path.join("temp/", name.split(".")[0] + ".jpg")
+    ruta_abs = os.path.abspath(ruta_relativa)
+    image.save(ruta_abs, "jpeg")
+    return ruta_abs
 
 def extract_imgs(path_to):
     """This function will perform a search in the dir you pass in the params"""
@@ -17,11 +26,14 @@ def extract_imgs(path_to):
         #For compatibility reasons, this code only accepts 4 formats
         if not (piname.endswith(".jpg") or piname.endswith(".png") or piname.endswith(".jpeg") or piname.endswith(".webp")):
             continue
-
+        
         path = os.path.join(path_to, piname)
 
         if os.path.isdir(path):
             continue
+        
+        if (piname.endswith(".webp")):
+            path = convert_webp(path, piname)
 
         imgs.append(path)
     
@@ -42,6 +54,11 @@ def convert_pdf(path_to, final_name, imgs):
         final_pdf.write(img2pdf.convert(imgs))
 
     print("\a")
+
+    #Cleans conversion cache
+    for cache_im in os.listdir("temp/"):
+        path = os.path.join(os.path.abspath("temp/"), cache_im)
+        os.remove(path)
 
 
 
